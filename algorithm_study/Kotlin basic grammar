@@ -1,0 +1,234 @@
+//Kotlin grammar basic
+
+//Kotlin에서 세미콜론은 사용x
+
+//변수 선언, variable type은 생략 가능(type inffered) 
+val a:Int=10; // 수정 불가능한 변수
+var a:Int=10;
+val a=10;
+var a=10;
+
+//배열
+var intArr:Array<Int> = arrayOf(1, 2, 3, 4) // type inffered로 type 생략가능
+var anyArr:Array<Any> = arrayOf(1, "awd", 3.2, 4) //Any는 최상의 데이터 타입으로 암거나 가능
+print(intArr[0]) //출력방식
+
+//break, continue 사용방법은 똑같음
+
+//if 조건문
+fun maxOf(a:Int, b:Int):Int
+{
+	if(a>b)
+	{
+		return a
+	}
+	else{
+		return b
+	}
+}
+
+fun maxOf(a:Int, b:Int)=if(a>b) a else b // 이렇게도 사용 가능
+
+//is 명령어로 데이터 타입 비교
+//Any로 선언한 후에도 비교 가능 
+if(a is Int)
+{
+    println("int")
+}
+
+//when 조건문 // 모든 경우를 다 표시해 주면 else 안써도 됨
+when(x){
+	1->print("x==1")
+	2->print("x==2")
+	else->{
+		print("x is not 1 nor 2")
+	}
+}
+
+//for 반복문
+for(x in 1..10) // x는 for문 안에서 선언됨
+{
+	println(x)
+}
+
+for(x in 10 downTo 1) // 작아지는 방향으로 출력
+{
+	println(x)
+}
+
+for(x in 1..10 step 2) // 2씩 건너 뛰면서 출력
+{
+	println(x)
+}
+
+for(i in 'a'..'e')
+{
+    println(i)
+}
+
+// iterator를 제공하여 다음과 같이 출력할 수도 있음
+val stu=listOf("Kim", "Choi", "Lee", "Park")
+for(name in stu)
+{
+	println(name)
+}
+
+//while 반복문
+while(x>0)
+{
+	x--
+}
+
+//Nullable variable
+//Kotlin은 nullException에 민감해서 variable의 null을 허용하지 않음
+//따라서 null을 허용하는 변수는 따로 표기를 해둠
+val name:String?=null
+println(name?.length)
+
+val stu_name: List<String?> =listOf("Choi", "Kim", "Park", null)
+for(name in stu_name)
+{
+    name?.let{println(it)} // null인 변수는 빼고 다르고 싶을 때 사용하는 let 명령어
+}
+
+var a:String?=null
+val l=a?.length ?:-1 // a가 null이 아니면 length가 반환되지만 null이면 오른쪽 값(-1) 반환
+println(l)
+
+//!!명령어
+var a:String?=null
+var l=a!!.length // a가 null이면 nullExcption발생
+println(l)
+
+//as명령어
+//nullExcption을 피하기 위한 명령어
+val b=a as? Int //a가 오른쪽 type이 맞으면 b=a 정상 실행, 아니면 null return
+
+//함수
+//함수 선언시 Void역할을 하는 자료형은 Unit
+//함수 자료형은 생략가능
+
+fun printSum(a:Int, b:Int):Int
+{
+	println("sum of $a and $b is ${a+b}")
+}
+
+//리스트
+//list: 수정 불가능한 리스트, MutableList: 수정 가능한 리스트
+var numbers=listOf("one", "two", "three", "four")
+println(numbers) // [one, two, three, four]
+println("Number of element: ${numbers.size}") // 4
+println("Third element: ${numbers.get(2)}") // three
+println("Fourth element: ${numbers[3]}") // four
+println("Index of element \"two\" ${numbers.indexOf("two")}") // 1
+
+val numbers=mutableListOf(1,2,3,4) // 1,2,3,4
+numbers.add(5) // 1,2,3,4,5
+numbers.removeAt(1) // 1,3,4,5
+numbers[0]=0 // 0,3,4,5
+numbers.shuffle()
+println(numbers)
+
+//Set(집합)
+//순서가 없고 null은 하나만 가질 수 있음
+val numbers1=setOf(1,2,3,4)
+val numbers2=setOf(4,3,2,1) // numbers1==numbers2
+numbers1.first()==1
+numbers1.last()==4
+numbers2.first()==4
+numbers2.last()==1
+println("Number of element: ${numbers.size})")
+numbers.contains(1) // return true/false
+
+//Map
+val numbersMap=mapOf("key1" to 1, "key2" to 2, "key3" to 3, "key4" to 1)
+println("All keys: ${numbersMap.keys}") // All keys: [key1, key2, key3, key4]
+println("All valuues: ${numbersMap.values}") // All values: [1,2,3,1]
+if("key2" in numbersMap) println("Value by \"key2\": ${numbersMap["key2"]}" // 2
+if(1 in numbersMap) println("The value 1 is in the map")
+if(numbersMap.containsValue(1)) println("1 is in the Map") // 2번 출력됨
+
+val numbersMap2=mapOf("key2" to 2, "key4" to 1, "key3" to 3, "key1" to 1)
+// numbersMap==numbersMap2
+
+val numbersMap=mutableMapOf("one" to 1, "two" to 2)
+numbersMap.put("three", 3)
+numbersMap["one"]=11
+println(numbersMap) // {one=11, two=2, three=3}
+
+//class
+
+fun main()
+{
+    var a = Prs("awd", 23)
+
+    println("${a.birth} ${a.name}")
+    a.introduce()
+}
+
+class Prs(var name:String, val birth:Int) // class 생성시 생성자가 따로 필요 없음
+{
+    fun introduce()
+    {
+        println("$name $birth")
+    }
+}
+
+//하지만 생성자를 init을 사용하여 아래와 같이 만들 수도 있음(여러개 가능)
+fun main(){
+    var a = Prs("awd", 23) // awd, 23과 1 둘 다 출력(생성자가 2개 이므로)
+
+}
+
+class Prs(var name:String, val birth:Int)
+{
+    init
+    {
+        println("${this.name} ${this.birth}")
+    }
+    init{
+        println(1)
+    }
+}
+
+//constructor 보조 생성자
+fun main(){
+    var a = Prs("awd")
+
+}
+
+class Prs(var name:String, val birth:Int)
+{
+    constructor(name:String): this(name, 23)//this를 사용해 기본 생성자로 값을 넘겨줘야 한다.
+    init
+    {
+        println("${this.name} ${this.birth}")
+    }
+}
+
+// class의 상속시 부모 calss에 open이라는 키워드가 있어야 됨
+fun main(){
+    var dog = Dog("a", 12)
+    dog.introduce1()
+    dog.introduce()
+}
+
+open class Animal(var name:String, var age:Int, var type:String)
+{
+    open fun introduce()
+    {
+        println("${this.name} ${this.age} ${this.type}")
+    }
+}
+class Dog(var name1: String, var age1: Int) : Animal(name1, age1, "강아지")
+{
+    fun introduce1()
+    {
+        super.introduce()
+    }
+
+    override fun introduce() 
+    {
+        println("override")
+    }
+}

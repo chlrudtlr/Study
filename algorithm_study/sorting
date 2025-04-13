@@ -1,0 +1,170 @@
+#include <iostream>
+
+using namespace std;
+
+int mergeList[10];
+
+void printArr(int arr[])
+{
+    for(int i=0;i<10;i++)
+        cout<<arr[i]<<" ";
+    cout<<endl;
+}
+
+void bubble_sort(int arr[])
+{
+    int temp=0;
+    for(int i=0;i<10;i++){
+        for(int j=0;j<10-i-1;j++){
+            if(arr[j]>arr[j+1]){
+                temp=arr[j];
+                arr[j]=arr[j+1];
+                arr[j+1]=temp;
+            }
+        }
+    }
+
+    printArr(arr);
+}
+
+void selection_sort(int arr[])
+{
+    int min_index=0;
+    int temp=0;
+    for(int i=0;i<10-1;i++){
+        min_index=i;
+        for(int j=i+1;j<10;j++){
+            if(arr[min_index]>arr[j]){
+                min_index=j;
+            }
+        }
+        temp=arr[i];
+        arr[i]=arr[min_index];
+        arr[min_index]=temp;
+    }
+    printArr(arr);
+}
+
+void insertion_sort(int arr[])
+{
+    int check_index=0;
+    int temp=0;
+    for(int i=1;i<10;i++){
+        check_index=i;
+        for(int j=i-1;j>=0 && arr[j]>arr[check_index];j--){
+            temp=arr[j];
+            arr[j]=arr[check_index];
+            arr[check_index]=temp;
+            check_index--;
+        }
+    }
+
+    printArr(arr);
+}
+
+void quick_sort(int arr[], int left, int right)
+{
+    if(left>=right){
+        return;
+    }
+
+    int pivot=left;
+    int checkL=left+1;
+    int checkR=right;
+    int temp=0;
+
+    while(checkL<=checkR){
+        while(checkL<=right && arr[checkL]<arr[pivot]){
+            checkL++;
+        }
+        while(checkR>=left && arr[checkR]>arr[pivot]){
+            checkR--;
+        }
+        if(checkL>checkR){
+            temp=arr[checkR];
+            arr[checkR]=arr[pivot];
+            arr[pivot]=temp;
+            pivot=checkR;
+        }
+        else{
+            temp=arr[checkL];
+            arr[checkL]=arr[checkR];
+            arr[checkR]=temp;
+        }
+    }
+
+    quick_sort(arr, left, pivot-1);
+    quick_sort(arr, pivot+1, right);
+}
+
+void merge_List(int arr[], int left, int right)
+{
+    //mergeList[10]
+    int middle=(left+right)/2;
+    int L=left;
+    int R=middle+1;
+    int k=left;
+
+    while(L<=middle && R<=right){
+        if(arr[L]<=arr[R]){
+            mergeList[k]=arr[L];
+            k++;
+            L++;
+        }
+        else{
+            mergeList[k]=arr[R];
+            k++;
+            R++;
+        }
+    }
+    if(L>middle){
+        while(R<=right){
+            mergeList[k]=arr[R];
+            R++;
+            k++;
+        }
+    }
+    else{
+        while(L<=middle){
+            mergeList[k]=arr[L];
+            L++;
+            k++;
+        }
+    }
+
+    for(int i=left;i<=right;i++){
+        arr[i]=mergeList[i];
+    }
+}
+
+void merge_sort(int arr[], int left, int right)
+{
+    if(left==right){
+        return;
+    }
+    int middle=(left+right)/2;
+    merge_sort(arr, left, middle);
+    merge_sort(arr, middle+1, right);
+    merge_List(arr, left, right);
+}
+
+int main()
+{
+    int arr[10]={4,1,3,8,0,6,9,7,2,5};
+
+    //안쓰는건 지우고 따로 실행해야 됨
+    cout<<"bubble sort : ";
+    bubble_sort(arr);
+    cout<<"selection sort : ";
+    selection_sort(arr);
+    cout<<"insertion sort : ";
+    insertion_sort(arr);
+    cout<<"quick_sort : ";
+    quick_sort(arr, 0, 9);
+    printArr(arr);
+    cout<<"merge sort : ";
+    merge_sort(arr, 0, 9);
+    printArr(mergeList);
+
+    return 0;
+}

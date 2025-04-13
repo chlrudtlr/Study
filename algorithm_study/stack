@@ -1,0 +1,19 @@
+#include <iostream>
+#include <stack>
+
+using namespace std;
+
+int main()
+{
+    stack<int> st; // stack 선언
+    stack<int> st1;
+    stack<char> st2;
+    
+    st.push(1);
+    st.pop(); // top element 삭제(반환이 아님)
+    st.top(); // top element 반환
+    st.size();
+    st.empty(); // return true/false
+    st.swap(st1); // stack끼리 element 바꾸기
+    return 0;
+}

@@ -1,0 +1,23 @@
+#include <iostream>
+#include <queue>
+
+using namespace std;
+
+int main()
+{
+    queue<int> q; // queue 선언
+    queue<int> q1;
+    
+    q.push(1);
+    q.pop(); // front element 제거
+    
+    q.front(); // front element 반환
+    q.back(); // back element 반환
+    
+    q.size();
+    q.empty(); // return true/false
+    
+    q.swap(q1);
+
+    return 0;
+}

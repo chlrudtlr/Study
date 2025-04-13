@@ -1,0 +1,258 @@
+#include <iostream>
+
+using namespace std;
+
+struct node
+{
+    int data;
+    node* rightNode;
+    node* leftNode;
+};
+
+class Tree
+{
+private:
+    node* root;
+public:
+    Tree()
+    {
+        root=NULL;
+    }
+
+    node* getRoot()
+	{
+		return root;
+	}
+	int showRoot()
+	{
+	    return root->data;
+	}
+	void insertValue(int n);
+    void addNode(node* parentNode, node* childNode);
+    void deleteValue(int n);
+    void deleteNode(node* parentNode, node* childNode, int n);
+    void FindValue(int n);
+    bool FindNode(node* Node, int n);
+    node* FindMinValue(node* parent);
+    node* FindMaxValue(node* parent);
+    void preorder(node* current);
+    void inorder(node* current);
+    void postorder(node* current);
+};
+
+void Tree::preorder(node* current)
+{
+    if(current==NULL)
+        return;
+    cout<<current->data<<" ";
+    preorder(current->leftNode);
+    preorder(current->rightNode);
+}
+
+void Tree::inorder(node* current)
+{
+    if(current==NULL)
+        return;
+    inorder(current->leftNode);
+    cout<<current->data<<" ";
+    inorder(current->rightNode);
+}
+
+void Tree::postorder(node* current)
+{
+    if(current==NULL)
+        return;
+    postorder(current->leftNode);
+    postorder(current->rightNode);
+    cout<<current->data<<" ";
+}
+
+node* Tree::FindMaxValue(node* parent)
+{
+    if(parent->rightNode==NULL){
+        return parent;
+    }
+    else{
+        FindMaxValue(parent->rightNode);
+    }
+}
+
+node* Tree::FindMinValue(node* parent)
+{
+    if(parent->leftNode==NULL){
+        return parent;
+    }
+    else{
+        FindMinValue(parent->leftNode);
+    }
+}
+
+void Tree::insertValue(int n)
+{
+    node* temp=new node;
+    temp->data=n;
+    temp->leftNode=NULL;
+    temp->rightNode=NULL;
+
+    if(root==NULL)
+    {
+        root=temp;
+    }
+    else
+    {
+        addNode(root, temp);
+    }
+}
+
+void Tree::addNode(node* parentNode, node* childNode)
+{
+    if(parentNode->data<childNode->data)
+    {
+        if(parentNode->rightNode==NULL){
+            parentNode->rightNode=childNode;
+        }
+        else{
+            addNode(parentNode->rightNode, childNode);
+        }
+    }
+    else
+    {
+        if(parentNode->leftNode==NULL){
+            parentNode->leftNode=childNode;
+        }
+        else{
+            addNode(parentNode->leftNode, childNode);
+        }
+    }
+}
+
+void Tree::deleteValue(int n)
+{
+    if(root==NULL){
+        return;
+    }
+    else if(root->data==n){
+        node* newNode=FindMinValue(root->rightNode);
+        deleteValue(newNode->data);
+        newNode->leftNode=root->leftNode;
+        newNode->rightNode=root->rightNode;
+        root=newNode;
+    }
+    else if(root->data>n){
+        deleteNode(root, root->leftNode, n);
+    }
+    else{
+        deleteNode(root, root->rightNode, n);
+    }
+}
+
+void Tree::deleteNode(node* parentNode, node* childNode, int n)
+{
+    if(childNode->data==n)
+    {
+        if(childNode->leftNode==NULL && childNode->rightNode==NULL){
+            if(childNode==parentNode->leftNode){
+                parentNode->leftNode=NULL;
+            }
+            else{
+                parentNode->rightNode=NULL;
+            }
+        }
+        else if(childNode->leftNode==NULL){
+            if(childNode==parentNode->rightNode){
+                parentNode->rightNode=childNode->rightNode;
+            }
+            else{
+                parentNode->leftNode=childNode->rightNode;
+            }
+        }
+        else if(childNode->rightNode==NULL){
+            if(childNode==parentNode->rightNode){
+                parentNode->rightNode=childNode->leftNode;
+            }
+            else{
+                parentNode->leftNode=childNode->leftNode;
+            }
+        }
+        else{
+            node* newNode=FindMinValue(childNode);
+            deleteValue(newNode->data);
+            if(childNode==parentNode->rightNode){
+                parentNode->rightNode=newNode;
+                newNode->leftNode=childNode->leftNode;
+                newNode->rightNode=childNode->rightNode;
+            }
+            else{
+                parentNode->leftNode=newNode;
+                newNode->leftNode=childNode->leftNode;
+                newNode->rightNode=childNode->rightNode;
+            }
+        }
+    }
+    else if(childNode->data>n){
+        deleteNode(childNode, childNode->leftNode, n);
+    }
+    else{
+        deleteNode(childNode, childNode->rightNode, n);
+    }
+}
+
+void Tree::FindValue(int n)
+{
+    if(FindNode(root, n)){
+        cout<<n<<" is exist"<<endl;
+    }
+    else{
+        cout<<n<<" is not exist"<<endl;
+    }
+}
+
+bool Tree::FindNode(node* Node, int n)
+{
+    if(!Node){
+        return false;
+    }
+    else if(Node->data==n){
+        return true;
+    }
+    else if(Node->data<n){
+        FindNode(Node->rightNode, n);
+    }
+    else{
+        FindNode(Node->leftNode, n);
+    }
+}
+
+int main()
+{
+    Tree a;
+
+    a.insertValue(7);
+    a.insertValue(5);
+    a.insertValue(10);
+    a.insertValue(2);
+    a.insertValue(6);
+    a.insertValue(8);
+    a.insertValue(12);
+
+    cout<<"1. preoder"<<endl;
+    a.preorder(a.getRoot());
+    cout<<endl;
+
+    cout<<"2. inorder"<<endl;
+    a.inorder(a.getRoot());
+    cout<<endl;
+
+    cout<<"3. postorder"<<endl;
+    a.postorder(a.getRoot());
+    cout<<endl;
+
+    cout<<"--------------"<<endl;
+    a.deleteValue(10);
+    a.preorder(a.getRoot());
+    cout<<endl;
+
+    a.FindValue(8);
+
+    return 0;
+}

@@ -1,0 +1,30 @@
+#include<iostream>
+#include<string>
+#include<vector>
+
+using namespace std;
+
+int main() {
+
+  // 첫 번째 방법
+    string str = "hello my name is choi kyung sik";
+    vector<int> index;
+    vector<string> s;
+    
+    //index벡터에 str문자열의 공백 인덱스 저장, 이 때 처음과 끝은 -1과 str.length()로 따로 넣어줌
+    index.push_back(-1);
+    for(int i=0;i<str.length();i++){
+        if(str[i]==' '){
+            index.push_back(i);
+        }
+    }
+    index.push_back(str.length());
+    
+    //공백의 index를 이용해 substr로 문자열 저장
+    for(int i=0;i<index.size()-1;i++){
+        s.push_back(str.substr(index[i]+1, index[i+1]-index[i]-1));
+    }
+    for(int i=0;i<s.size();i++){
+        cout<<s[i]<<endl;
+    }  
+}

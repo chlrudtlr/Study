@@ -1,0 +1,127 @@
+// Doubly Linked List
+#include <iostream>
+
+using namespace std;
+
+struct node
+{
+    int data;
+    node* rightNode;
+    node* LeftNode;
+};
+
+class LinkedList
+{
+private:
+    node* head;
+    node* tail;
+public:
+    LinkedList()
+    {
+        head=NULL;
+        tail=NULL;
+    }
+
+    void addFrontNode(int n);
+    void addNode(int n);
+    void insertNode(node* prevNode, int n);
+    void deleteNode(node* thisNode);
+    node* getHead()
+    {
+        return head;
+    }
+    void ShowList(node* head);
+};
+
+void LinkedList::addFrontNode(int n)
+{
+    node* temp=new node;
+    temp->data=n;
+    temp->LeftNode=NULL;
+    temp->rightNode=NULL;
+
+    if(head==NULL)
+    {
+        head=temp;
+        tail=temp;
+    }
+    else
+    {
+        temp->rightNode=head;
+        head->LeftNode=temp;
+        head=temp;
+    }
+}
+void LinkedList::addNode(int n)
+{
+    node* temp=new node;
+    temp->data=n;
+    temp->LeftNode=NULL;
+    temp->rightNode=NULL;
+
+    if(head==NULL)
+    {
+        head=temp;
+        tail=temp;
+    }
+    else
+    {
+        temp->LeftNode=tail;
+        tail->rightNode=temp;
+        tail=temp;
+    }
+}
+void LinkedList::insertNode(node* prevNode, int n)
+{
+    node* temp=new node;
+    temp->data=n;
+    temp->LeftNode=NULL;
+    temp->rightNode=NULL;
+
+    temp->rightNode=prevNode->rightNode;
+    temp->LeftNode=prevNode;
+    prevNode->rightNode->LeftNode=temp;
+    prevNode->rightNode=temp;
+
+}
+void LinkedList::deleteNode(node* thisNode)
+{
+    thisNode->LeftNode->rightNode=thisNode->rightNode;
+    thisNode->rightNode->LeftNode=thisNode->LeftNode;
+}
+void LinkedList::ShowList(node* head)
+{
+    if(head->rightNode==NULL)
+    {
+        cout<<head->data<<endl;
+        cout<<"------DONE------"<<endl;
+    }
+    else
+    {
+        cout<<head->data<<endl;
+        ShowList(head->rightNode);
+    }
+}
+
+int main()
+{
+    LinkedList a;
+    a.addNode(1);
+    a.addNode(2);
+    a.addNode(3);
+    a.addNode(4);
+    a.addNode(5);
+
+    a.ShowList(a.getHead());
+
+    a.addFrontNode(0);
+    a.ShowList(a.getHead());
+
+    a.insertNode(a.getHead()->rightNode->rightNode, 7);
+    a.ShowList(a.getHead());
+
+    a.deleteNode(a.getHead()->rightNode->rightNode->rightNode);
+    a.ShowList(a.getHead());
+
+    return 0;
+}

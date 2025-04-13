@@ -1,0 +1,36 @@
+#include <iostream>
+#include <list>
+
+using namespace std;
+
+int main()
+{
+	list<int> list; // 리스트 선언 방법
+	list.push_back(11); // 리스트에 원소 추가
+	
+	// 반복자 생성
+	list<int>::iterator iter=list.begin(); // 리스트는 배역 기반이 아니기 때문에 인덱스로 원소에 접근할 수 없다.
+
+	// 반복자를 통한 리스트 원소 출력
+	for(iter=list.begin();iter!=list.end();iter++)
+	{
+		cout << *iter << endl;
+	}
+
+	// 리스트 원소 추가
+	list.insert(iter, 22) // 반복자가 가리키는 부분의 앞에 원소 추가
+	
+	// 리스트 원소 삭제
+	list.pop_back();
+	list.pop_front();
+
+	// 리스트 사이즈 출력(=원소 갯수)
+	cout<<list.size()<<endl;
+
+	cout<<list.empty()<<endl; // 리스트가 비어있는지
+
+	cout<<list.front()<<endl; // 리스트 첫번째 원소
+	cout<<list.back()<<endl; // 리스트 마지막 원소
+
+	return 0;
+}

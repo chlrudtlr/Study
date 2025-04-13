@@ -1,0 +1,109 @@
+// Online C++ compiler to run C++ program online
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+vector<int> visit; // 1 is visited
+vector<int> bfs_answer;
+vector<int> dfs_answer;
+
+vector <int> b;
+int index;
+
+void DFS(vector<vector<int>> dot, int start)
+{
+    if(visit[start]==0) visit[start]=1; // for start
+    
+    dfs_answer.push_back(start);
+    for(int i=0;i<dot[start].size();i++){
+        int t=dot[start][i];
+        if(visit[t]==0){
+            visit[t]=1;
+            DFS(dot, t);
+        }
+    }
+}
+
+void BFS(vector<vector<int>> dot, int start)
+{
+    if(visit[start]==0){
+        visit[start]=1;
+        bfs_answer.push_back(start);
+    }
+    for(int i=0;i<dot[start].size();i++){
+        int t=dot[start][i];
+        if(visit[t]==0){
+            visit[t]=1;
+            bfs_answer.push_back(t);
+        }
+    }
+    
+    index++;
+    if(index<bfs_answer.size()){
+        BFS(dot, bfs_answer[index]);
+    }
+}
+
+void print_dfs()
+{
+    for(int i=0;i<dfs_answer.size();i++){
+        cout<<dfs_answer[i]<<" ";
+    }
+    cout<<endl;
+}
+
+void print_bfs()
+{
+    for(int i=0;i<bfs_answer.size();i++){
+        cout<<bfs_answer[i]<<" ";
+    }
+    cout<<endl;
+}
+
+void visit_reset()
+{
+    for(int i=0;i<visit.size();i++){
+        visit[i]=0;
+    }
+}
+
+int main() 
+{
+    int dot_num=0;
+    int line_num=0;
+    int start=0;
+    index=0;
+    vector<vector<int>> dot;
+    
+    cin>>dot_num>>line_num>>start;
+    
+    for(int i=0;i<dot_num+1;i++){
+        vector<int> v;
+        visit.push_back(0);
+        dot.push_back(v);
+    }
+    
+    for(int i=0;i<line_num;i++){
+        int a;
+        int b;
+        cin>>a>>b;
+        dot[a].push_back(b);
+        dot[b].push_back(a);
+    }
+    
+    for(int i=0;i<dot.size();i++){
+        sort(dot[i].begin(), dot[i].end());
+    }
+    
+    visit_reset();
+    DFS(dot, start);
+    print_dfs();
+    
+    visit_reset();
+    BFS(dot, start);
+    print_bfs();
+
+    return 0;
+}

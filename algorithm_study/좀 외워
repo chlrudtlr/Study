@@ -1,0 +1,13 @@
+stoi // 음수도 가능
+to_srting
+
+toupper(문자열) //소문자 -> 대문자 변환
+tolower(문자열) //대문자 -> 소문자 변환
+
+return n == 0; // n이 0일때 true를 리턴, n이 0이 아니면 false리턴
+
+int arr[50][50]={0};
+memset(arr, 0, sizeof(arr)); // 배열초기화 // TC가 많을 때 // <string.h> or <memory.h> 필요
+
+priority_queue <int, vector<int>, greater<int> > q; // 우선순위 큐(오름차순)
+priority_queue<int> pq; // 우선순위 큐(내림차순)

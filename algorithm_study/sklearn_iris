@@ -1,0 +1,37 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+pd.set_option('display.max_colwidth', None)
+
+iris = load_iris()
+
+X_train, X_test, y_train, y_test = train_test_split(iris.data, iris.target,test_size=0.3)
+
+print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
+
+print("=====TRAIN=====")
+iris_df = pd.DataFrame(X_train)
+iris_df['target'] = y_train
+print(iris_df)
+
+print("=====TEST=====")
+iris_test_df = pd.DataFrame(X_test)
+iris_test_df['target'] = y_test
+print(iris_test_df)
+
+model = KNeighborsClassifier(n_neighbors=1) # 기본값은 5
+model.fit(X_train, y_train) # fit 데이터로 모델 생성
+
+print("=====PREDICT=====")
+print(model.predict([[6.8,3.0,5.5,2.1]]))
+
+score = model.score(X_test, y_test) #평가
+print(score)

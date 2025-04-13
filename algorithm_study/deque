@@ -1,0 +1,36 @@
+#include <iostream>
+#include <deque>
+
+using namespace std;
+
+int main()
+{
+    deque<int> d; // 단순 선언
+    deque<int> d(5); // 0으로 초기화된 size가 5인 deque선언
+    deque<int> d(5, 10)) // 10으로 초기화된 size가 5인 deque선언
+    deque<int> d={1,2,3,4};
+    deque<int> d1(d2);
+    
+    d.push_back(1);
+    d.pop_back(); // 반환하지 않고 삭제
+    
+    d.push_front(1);
+    d.pop_front();
+    
+    d.begin();
+    d.end();
+    d.insert(d.begin()+2, 100); // d.begin+2 자리에 100 추가
+    d.erase(d.begin()+2);
+    
+    d.front();
+    d.back();
+    d.clear(); // 모든 원소 제거
+    
+    d.size();
+    d.empty();
+    
+    d[2] // 배열 형태로 원소 접근 가능
+    d.at(2) 
+    
+    return 0;
+}

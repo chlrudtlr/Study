@@ -1,0 +1,31 @@
+#include<iostream>
+#include<string>
+#include<vector>
+
+using namespace std;
+
+int main() {
+
+    string str = "hello my name is choi kyung sik";
+    vector<string> answer;
+    
+    string s;
+    int index=0;
+    int i=0;
+    while(i<str.length()){
+        if(str[i]!=' '){
+            s+=str[i];
+        }
+        else{
+            answer.push_back(s);
+            s="";
+        }
+        i++;
+    }
+    
+    for(int i=0;i<answer.size();i++){
+        cout<<answer[i]<<endl;
+    }
+    
+    return 0;
+}
