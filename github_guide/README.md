@@ -61,7 +61,7 @@ git pull origin main
 git checkout my_branch
 
 # 4. 메인 브랜치를 기준으로 리베이스
-git rebase main       # 또는 dev
+git rebase main
 
 # 5. 충돌이 있다면 수정 → add → rebase --continue
 git add .
