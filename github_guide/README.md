@@ -42,7 +42,8 @@ git add .      # 모든 변경 사항 스테이징
 git commit -m "commit message"
 git push       # GitHub로 반영
 ```
-### 여러가지 시나리오
+***
+### ✏️여러가지 시나리오
 #### ✔️ commit하고 push 했는데 되돌리고 싶을 때
 ```bash
 git reset --hard HEAD~1
