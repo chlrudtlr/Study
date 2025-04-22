@@ -52,13 +52,13 @@ git push origin HEAD --force
 #### ✔️ rebase 과정
 ```bash
 # 1. 메인 브랜치로 이동
-git checkout main     # 또는 dev
+git checkout main
 
 # 2. 원격에서 최신 상태 받아오기
-git pull origin main  # 또는 git pull origin dev
+git pull origin main
 
 # 3. 작업 중이던 브랜치로 다시 이동
-git checkout my-feature-branch
+git checkout my_branch
 
 # 4. 메인 브랜치를 기준으로 리베이스
 git rebase main       # 또는 dev
@@ -68,7 +68,7 @@ git add .
 git rebase --continue
 
 # 6. 리베이스 후엔 강제 push (원격 브랜치 업데이트)
-git push origin my-feature-branch --force
+git push origin my_branch --force
 
 # 7. GitHub에서 Pull Request 생성 🎉
 ```
