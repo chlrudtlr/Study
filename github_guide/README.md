@@ -67,8 +67,44 @@ git rebase main
 git add .
 git rebase --continue
 
-# 6. 리베이스 후엔 강제 push (원격 브랜치 업데이트)
+# 6. 리베이스 후엔 강제 push (원격 브랜치 업데이트) - rebase하면 커밋 해시가 바뀌기 때문
 git push origin my_branch --force
 
 # 7. GitHub에서 Pull Request 생성 🎉
+```
+▸ rebase는 **"내 브랜치에서 남의 브랜치를 기준으로 내 히스토리를 다시 쌓는 것"** 이므로 내 브랜치로 이동한 다음에 rebase 해야 한다.
+#### ✔️ branch 관련 작업들
+##### 1) 브랜치 생성 + 바로 이동
+```bash
+git checkout -b branch_name
+```
+▸ branch_name이라는 새 브랜치를 만들고, 그 브랜치로 즉시 이동한다.
+##### 2) 브랜치 이동
+```bash
+git checkout branch_name
+```
+▸ 이미 존재하는 브랜치(branch_name)로 이동한다.
+##### 3) 현재 브랜치 확인
+```bash
+git branch
+```
+▸ 현재 로컬에 존재하는 브랜치 목록 중 * 표시된 것이 현재 브랜치이다.
+
+▸ -a 옵션 : 원격 브랜치를 포함한 전체 브랜치 확인 가능
+##### 4) 원격 브랜치를 로컬로 가져오기
+```bash
+git checkout -b branch_name origin/branch_name
+```
+▸ GitHub 등 원격 저장소에 있는 브랜치를 내 로컬에서 branch_name으로 만들고 이동한다.
+##### 5) 로컬 브랜치 삭제
+```bash
+git branch -d branch_name
+```
+##### 6) 원격 브랜치 삭제
+```bash
+git push origin --delete branch_name
+```
+##### 7) 브랜치 이름 변경
+```bash
+git branch -m branch_name new_branch_name
 ```
