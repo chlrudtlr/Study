@@ -27,6 +27,7 @@ cd your-repo-name
 ```bash
 git pull origin main
 ```
+▸ 만약 VSCode등에서 적용이 안된 것 처럼 보이면 껐다키거나 Ctrl + Shift + P → "Reload Window" 입력 → 엔터
 #### ⑤ 작업 방법
 1) 파일을 vim으로 수정 또는 GUI로 열어서 작업
 ```bash
