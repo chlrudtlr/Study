@@ -32,7 +32,6 @@ int main()
     v.insert(a,b); //a위치에 b를 insert
     
     v.empty(); // return true/false
-     
 
     return 0;
 }
