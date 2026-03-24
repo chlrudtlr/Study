@@ -22,19 +22,19 @@ void PrintVector()
         cout << "(" << i << ", " << node_rank[i] << ")";
     }
     cout << endl;
+
+    cout << endl;
 }
 
-int FindParent(int k)
+int FindParent(int node)
 {
-    if (parent[k] == k)
+    if (parent[node] == node)
     {
-        return k;
+        return node;
     }
-    else
-    {
-        int parentK = parent[k];
-        return FindParent(parentK);
-    }
+
+    parent[node] = FindParent(parent[node]);
+    return parent[node];
 }
 
 void Union(int a, int b)
@@ -46,21 +46,19 @@ void Union(int a, int b)
     {
         return;
     }
+
+    if (node_rank[parentA] < node_rank[parentB])
+    {
+        parent[parentA] = parentB;
+    }
+    else if (node_rank[parentA] > node_rank[parentB])
+    {
+        parent[parentB] = parentA;
+    }
     else
     {
-        if (node_rank[parentA] < node_rank[parentB])
-        {
-            parent[parentA] = parentB;
-        }
-        else if (node_rank[parentA] > node_rank[parentB])
-        {
-            parent[parentB] = parentA;
-        }
-        else // node_rank[parentA] == node_rank[parentB]
-        {
-            parent[parentA] = parentB;
-            node_rank[parentA]++;
-        }
+        parent[parentB] = parentA;
+        node_rank[parentA]++;
     }
 }
 
@@ -85,6 +83,12 @@ int main()
     PrintVector();
 
     Union(1, 3);
+    PrintVector();
+
+    Union(6, 9);
+    PrintVector();
+
+    Union(2, 9);
     PrintVector();
 
     return 0;
