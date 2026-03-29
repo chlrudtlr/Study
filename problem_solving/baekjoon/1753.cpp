@@ -29,14 +29,13 @@ int main()
     visited.resize(V + 5, false);
     dist.resize(V + 5, 987654321);
     dist[K] = 0; // 시작점이라서 0으로 세팅해주긴 하는데 여기서 해주는게 맞나
-    visited[K] = true;
 
     // 간선 정보에 대한 input 받기
     for (int i = 0; i < E; i++)
     {
         int u = 0, v = 0, w = 0; // u에서 v로 가는 가중치 w인 간선이 존재한다는 뜻
         cin >> u >> v >> w;
-        field[u].push_back(make_pair(v, w));
+        field[u].push_back(make_pair(w, v));
     }
 
     // 다익스트라 알고리즘
@@ -52,18 +51,18 @@ int main()
     {
         int cur_pos = pq.top().second;
         int cur_dist = pq.top().first;
+        visited[cur_pos] = true;
         pq.pop();
 
         for (int i = 0; i < field[cur_pos].size(); i++)
         {
             int next_pos = field[cur_pos][i].second;
             int next_dist = field[cur_pos][i].first;
-            if (cur_dist + next_dist < dist[next_pos])
+            if ((!visited[next_pos]) && (cur_dist + next_dist < dist[next_pos]))
             {
                 dist[next_pos] = cur_dist + next_dist;
-                visited[next_pos] = true;
+                pq.push(make_pair(dist[next_pos], next_pos));
             }
-            pq.push(make_pair(dist[next_pos], next_pos));
         }
     }
 
