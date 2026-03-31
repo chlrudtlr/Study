@@ -27,6 +27,20 @@ struct cmp2
     }
 };
 
+struct Node
+{
+    int a, b, c;
+
+    bool operator<(const Node &other) const
+    {
+        if (a != other.a)
+            return a > other.a; // a 오름차순
+        if (b != other.b)
+            return b < other.b; // b 내림차순
+        return c > other.c;     // c 오름차순
+    }
+};
+
 int main()
 {
     cout << "===== 가장 기본적인 사용법 =====" << endl;
@@ -63,7 +77,7 @@ int main()
     cout << endl;
     cout << endl;
 
-    cout << "===== 원소가 2개인 경우 사용법(1) : pair 사용 =====" << endl;
+    cout << "===== 원소가 2개인 경우 사용법 : pair 사용 =====" << endl;
     priority_queue<pair<int, int>> pq2;
     pq2.push(make_pair(4, 2));
     pq2.push(make_pair(1, 1));
@@ -124,6 +138,26 @@ int main()
     {
         cout << "(" << pq4.top().first << ", " << pq4.top().second << ")" << " ";
         pq4.pop();
+    }
+    cout << endl;
+    cout << endl;
+
+    cout << "근데 원소의 갯수가 3, 4개 막 이렇게 많아지면 이 방법은 못 쓰니까 다른 방법을 알아보자" << endl;
+
+    cout << endl;
+
+    cout << "===== 원소가 여러 개인 경우 사용법 : 구조체 사용 =====" << endl;
+    cout << "원소의 갯수가 3개라고 가정하고 구조체 Node를 만들어보자" << endl;
+    cout << "첫번째 원소부터 차례로 오름차순, 내림차순, 오름차순 기준 : ";
+    priority_queue<Node> pq5;
+    pq5.push({1, 2, 3});
+    pq5.push({1, 5, 1});
+    pq5.push({1, 5, 2});
+    pq5.push({2, 1, 1});
+    while (!pq5.empty())
+    {
+        cout << "(" << pq5.top().a << ", " << pq5.top().b << ", " << pq5.top().c << ")" << " ";
+        pq5.pop();
     }
     cout << endl;
 
