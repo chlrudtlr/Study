@@ -93,8 +93,11 @@ using namespace std;
 int num_of_players;
 vector<int> score;        // 각 선수들의 점수
 vector<int> parent;       // 각 선수들의 부모를 저장
+vector<int> parent_rank;  // Union과정에 사용할 rank변수
 vector<vector<int>> team; // root인 선수들에게 children 선수들 추가
 vector<bool> isRoot;      // 해당 선수가 root인지 여부 -> team 벡터하고 같이 움직임
+
+bool debug; // 디버깅을 위한 변수
 
 int FindParent(int id)
 {
@@ -114,21 +117,35 @@ int FindParent(int id)
  */
 void init(int N)
 {
+    debug = false;
+
+    if (debug)
+    {
+        cout << "========== Start init ==========" << endl;
+    }
+
     score.clear();
     parent.clear();
     team.clear();
     isRoot.clear();
+    parent_rank.clear();
 
     num_of_players = N;
-    score.resize(num_of_players + 1, 0);      // 1-based
-    parent.resize(num_of_players + 1, 0);     // 1-based
-    team.resize(num_of_players + 1);          // 1-based
-    isRoot.resize(num_of_players + 1, false); // 1-based
+    score.resize(num_of_players + 1, 0);       // 1-based
+    parent.resize(num_of_players + 1, 0);      // 1-based
+    team.resize(num_of_players + 1);           // 1-based
+    isRoot.resize(num_of_players + 1, true);   // 1-based
+    parent_rank.resize(num_of_players + 1, 0); // 1-based
 
     for (int i = 0; i < num_of_players + 1; i++)
     {
         parent[i] = i;        // 처음에 자기 자신의 부모는 자기 자신
         team[i].push_back(i); // 각자의 부모가 자기 자신이므로
+    }
+
+    if (debug)
+    {
+        cout << "num_of_players = " << num_of_players << endl;
     }
 }
 
@@ -142,16 +159,58 @@ void updateScore(int mWinnerID, int mLoserID, int mScore)
     int winner_parent = FindParent(mWinnerID);
     int loser_parent = FindParent(mLoserID);
 
+    if (debug)
+    {
+        cout << "========== Start updateScore ==========" << endl;
+        cout << "winner team id = " << winner_parent << endl;
+        cout << "loser team id = " << loser_parent << endl;
+        cout << "mScore = " << mScore << endl;
+    }
+
+    if (debug)
+    {
+        cout << "Winner team before score : ";
+        for (int i = 0; i < team[winner_parent].size(); i++)
+        {
+            cout << score[team[winner_parent][i]] << " ";
+        }
+        cout << endl;
+
+        cout << "Loser team before score : ";
+        for (int i = 0; i < team[loser_parent].size(); i++)
+        {
+            cout << score[team[loser_parent][i]] << " ";
+        }
+        cout << endl;
+    }
+
     // 이긴 팀에 점수 추가
     for (int i = 0; i < team[winner_parent].size(); i++)
     {
-        score[i] += mScore;
+        score[team[winner_parent][i]] += mScore;
     }
 
     // 진 팀은 점수 제거
     for (int i = 0; i < team[loser_parent].size(); i++)
     {
-        score[i] -= mScore;
+        score[team[loser_parent][i]] -= mScore;
+    }
+
+    if (debug)
+    {
+        cout << "Winner team after score : ";
+        for (int i = 0; i < team[winner_parent].size(); i++)
+        {
+            cout << team[winner_parent][i] << " ";
+        }
+        cout << endl;
+
+        cout << "Loser team after score : ";
+        for (int i = 0; i < team[loser_parent].size(); i++)
+        {
+            cout << team[loser_parent][i] << " ";
+        }
+        cout << endl;
     }
 }
 
@@ -161,8 +220,78 @@ void updateScore(int mWinnerID, int mLoserID, int mScore)
  */
 void unionTeam(int mPlayerA, int mPlayerB)
 {
+    if (debug)
+    {
+        cout << "========== Start unionTeam ==========" << endl;
+        cout << "Let's Union " << mPlayerA << " and : " << mPlayerB << endl;
+    }
+
     int parentA = FindParent(mPlayerA);
     int parentB = FindParent(mPlayerB);
+
+    if (debug)
+    {
+        cout << "Prev parent of " << mPlayerA << " : " << FindParent(mPlayerA) << endl;
+        cout << "Prev Team member of " << mPlayerA << " : ";
+        for (int i = 0; i < team[parentA].size(); i++)
+        {
+            cout << team[parentA][i] << " ";
+        }
+        cout << endl;
+
+        cout << "Prev parent of " << mPlayerB << " : " << FindParent(mPlayerB) << endl;
+        cout << "Prev Team member of " << mPlayerB << " : ";
+        for (int i = 0; i < team[parentB].size(); i++)
+        {
+            cout << team[parentB][i] << " ";
+        }
+        cout << endl;
+    }
+
+    if (parentA == parentB)
+    {
+        return;
+    }
+
+    if (parent_rank[parentA] < parent_rank[parentB]) // A의 조가 B의 조 쪽으로 들어감
+    {
+        isRoot[parentA] = false;
+        team[parentB].insert(team[parentB].end(), team[parentA].begin(), team[parentA].end());
+        team[parentA].clear();
+
+        parent[parentA] = parentB;
+    }
+    else if (parent_rank[parentA] >= parent_rank[parentB]) // B의 조가 A의 조 쪽으로 들어감
+    {
+        isRoot[parentB] = false;
+        team[parentA].insert(team[parentA].end(), team[parentB].begin(), team[parentB].end());
+        team[parentB].clear();
+
+        parent[parentB] = parentA;
+        if (parent_rank[parentA] == parent_rank[parentB])
+        {
+            parent_rank[parentA]++;
+        }
+    }
+
+    if (debug)
+    {
+        cout << "Next parent of " << mPlayerA << " : " << FindParent(mPlayerA) << endl;
+        cout << "Next Team member of " << mPlayerA << " : ";
+        for (int i = 0; i < team[parentA].size(); i++)
+        {
+            cout << team[parentA][i] << " ";
+        }
+        cout << endl;
+
+        cout << "Next parent of " << mPlayerB << " : " << FindParent(mPlayerB) << endl;
+        cout << "Next Team member of " << mPlayerB << " : ";
+        for (int i = 0; i < team[parentB].size(); i++)
+        {
+            cout << team[parentB][i] << " ";
+        }
+        cout << endl;
+    }
 }
 
 /**
@@ -170,5 +299,11 @@ void unionTeam(int mPlayerA, int mPlayerB)
  */
 int getScore(int mID)
 {
+    if (debug)
+    {
+        cout << "========== Start getScore ==========" << endl;
+        cout << "score of " << mID << " is : " << score[mID] << endl;
+    }
+
     return score[mID];
 }
