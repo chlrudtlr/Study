@@ -94,6 +94,22 @@ int main()
  * 경유지를 방문하기 위해 출발 도시나 도착 도시를 거쳐서 가도 된다.
  */
 
+#include <iostream>
+#include <queue>
+#include <vector>
+#include <map>
+
+using namespace std;
+
+int num_of_city;
+int num_of_road;
+vector<vector<int>> city;           // 도시 연결 정보 저장
+map<pair<int, int>, int> roadLimit; // 도로 연결 정보 저장
+vector<bool> visited;               // 방문 여부 저장
+vector<int> maxLimit;               // 각 도시까지 운송 가능한 최대 크기 저장
+
+bool debug = false;
+
 /**
  * N개의 도시와 K개의 양방향 도로 정보가 주어진다.
  * N: 도시의 개수 ( 5 ≤ N ≤ 1,000 )
@@ -105,6 +121,41 @@ int main()
  */
 void init(int N, int K, int sCity[], int eCity[], int mLimit[])
 {
+    debug = true;
+
+    // ==================== Clear ====================
+    num_of_city = 0;
+    num_of_road = 0;
+    city.clear();
+    roadLimit.clear();
+    visited.clear();
+    maxLimit.clear();
+
+    // ==================== Initalize ====================
+    num_of_city = N;
+    num_of_road = K;
+    city.resize(num_of_city + 1);
+    visited.resize(num_of_city + 1, false);
+    maxLimit.resize(num_of_city + 1, 987654321);
+    for (int i = 0; i < num_of_road; i++)
+    {
+        city[sCity[i]].push_back(eCity[i]);
+        city[eCity[i]].push_back(sCity[i]);
+        roadLimit[make_pair(sCity[i], eCity[i])] = mLimit[i];
+        roadLimit[make_pair(eCity[i], sCity[i])] = mLimit[i];
+    }
+
+    if (debug)
+    {
+        cout << "==================== Initalize ====================" << endl;
+        cout << "num_of_city : " << num_of_city << endl;
+        cout << "num_of_road : " << num_of_road << endl;
+        for (int i = 0; i < num_of_road; i++)
+        {
+            cout << sCity[i] << " and " << eCity[i] << " is connected : " << mLimit[i] << endl;
+        }
+    }
+
     return;
 }
 
@@ -114,6 +165,19 @@ void init(int N, int K, int sCity[], int eCity[], int mLimit[])
  */
 void add(int sCity, int eCity, int mLimit)
 {
+    city[sCity].push_back(eCity);
+    city[eCity].push_back(sCity);
+    roadLimit[make_pair(sCity, eCity)] = mLimit;
+    roadLimit[make_pair(eCity, sCity)] = mLimit;
+    num_of_road++;
+
+    if (debug)
+    {
+        cout << "==================== ADD ====================" << endl;
+        cout << "Add " << sCity << " <-> " << eCity << " : " << mLimit << endl;
+        cout << "num_of_road : " << num_of_road << endl;
+    }
+
     return;
 }
 
@@ -125,5 +189,33 @@ void add(int sCity, int eCity, int mLimit)
  */
 int calculate(int sCity, int eCity, int M, int mStopover[])
 {
+    int result = 0;
+
+    visited.clear();
+    maxLimit.clear();
+    visited.resize(num_of_city + 1, false);
+    maxLimit.resize(num_of_city + 1, 987654321);
+
+    // sCity에서 eCity까지 다익스트라
+    priority_queue<pair<int, int>> pq;
+    pq.push(make_pair(0, sCity));
+    while (!pq.size())
+    {
+        int city = pq.top().second;
+        int limit = pq.top().first;
+    }
+
+    if (debug)
+    {
+        cout << "==================== Calculate ====================" << endl;
+        cout << "Start : " << sCity << " / End : " << eCity << endl;
+        cout << "Stopped : ";
+        for (int i = 0; i < M; i++)
+        {
+            cout << mStopover[i] << " ";
+        }
+        cout << endl;
+        cout << "result : " << result << endl;
+    }
     return 0;
 }

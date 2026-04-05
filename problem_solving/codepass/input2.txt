@@ -1,4 +1,4 @@
-25 100
+1 100
 11
 100 CMD_INIT
  number_of_city: 5  number_of_road: 2
