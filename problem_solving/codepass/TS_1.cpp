@@ -66,7 +66,7 @@ static bool run()
 int main()
 {
     setbuf(stdout, NULL);
-    freopen("input.txt", "r", stdin);
+    freopen("input1.txt", "r", stdin);
 
     int T, MARK;
     scanf("%d%d", &T, &MARK);
