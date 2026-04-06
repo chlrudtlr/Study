@@ -98,6 +98,7 @@ int main()
 #include <queue>
 #include <vector>
 #include <map>
+#include <algorithm>
 
 using namespace std;
 
@@ -121,7 +122,7 @@ bool debug = false;
  */
 void init(int N, int K, int sCity[], int eCity[], int mLimit[])
 {
-    debug = true;
+    debug = false;
 
     // ==================== Clear ====================
     num_of_city = 0;
@@ -136,7 +137,7 @@ void init(int N, int K, int sCity[], int eCity[], int mLimit[])
     num_of_road = K;
     city.resize(num_of_city + 1);
     visited.resize(num_of_city + 1, false);
-    maxLimit.resize(num_of_city + 1, 987654321);
+    maxLimit.resize(num_of_city + 1, 0);
     for (int i = 0; i < num_of_road; i++)
     {
         city[sCity[i]].push_back(eCity[i]);
@@ -189,20 +190,53 @@ void add(int sCity, int eCity, int mLimit)
  */
 int calculate(int sCity, int eCity, int M, int mStopover[])
 {
-    int result = 0;
-
     visited.clear();
     maxLimit.clear();
     visited.resize(num_of_city + 1, false);
-    maxLimit.resize(num_of_city + 1, 987654321);
+    maxLimit.resize(num_of_city + 1, 0);
 
     // sCity에서 eCity까지 다익스트라
     priority_queue<pair<int, int>> pq;
-    pq.push(make_pair(0, sCity));
-    while (!pq.size())
+    pq.push(make_pair(987654321, sCity));
+    maxLimit[sCity] = 987654321; // pq에 넣는 것 뿐만 아니라 초기화도 해야됨
+    while (!pq.empty())
     {
-        int city = pq.top().second;
-        int limit = pq.top().first;
+        int cur_city = pq.top().second;
+        int cur_limit = pq.top().first;
+
+        pq.pop();
+
+        if (cur_limit < maxLimit[cur_city])
+        {
+            continue;
+        }
+
+        for (int i = 0; i < city[cur_city].size(); i++)
+        {
+            int tmp_limit = min(cur_limit, roadLimit[make_pair(cur_city, city[cur_city][i])]);
+            if (tmp_limit > maxLimit[city[cur_city][i]])
+            {
+                maxLimit[city[cur_city][i]] = tmp_limit;
+                pq.push(make_pair(tmp_limit, city[cur_city][i]));
+            }
+        }
+    }
+
+    int result = 987654321;
+    result = min(result, maxLimit[eCity]);
+    for (int i = 0; i < M; i++)
+    {
+        if (maxLimit[mStopover[i]] == 0)
+        {
+            result = -1;
+            break;
+        }
+        result = min(result, maxLimit[mStopover[i]]);
+    }
+
+    if (maxLimit[eCity] == 0)
+    {
+        result = -1;
     }
 
     if (debug)
@@ -217,5 +251,5 @@ int calculate(int sCity, int eCity, int M, int mStopover[])
         cout << endl;
         cout << "result : " << result << endl;
     }
-    return 0;
+    return result;
 }
