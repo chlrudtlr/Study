@@ -253,6 +253,7 @@ void init(int N, int M, int mIceBlock[MAX_N][MAX_N], int mIceGroup[MAX_M][3])
 
     if (debug)
     {
+        cout << "After init" << endl;
         printfield();
         printfieldId();
     }
@@ -269,12 +270,41 @@ RESULT oneYearLater()
     {
         cout << "==================== OneYearLater Start ====================" << endl;
     }
+
+    // prev 파일들에 일단 현재 상태 저장
     vector<vector<int>> prev_field = field;
     vector<vector<int>> prev_field_ID = field_ID;
     map<int, int> prev_dir_of_ice = dir_of_ice;
 
-    vector<vector<int>> next_field;
-    vector<vector<int>> next_field_ID;
-    map<int, int> next_dir_of_ice;
+    // 1. 융해 먼저 수행
+    for (int i = 0; i < field_size; i++)
+    {
+        for (int j = 0; j < field_size; j++)
+        {
+            // 높이가 0보다 큰 부분이 있으면 높이 1 감소
+            if (field[i][j] > 0)
+            {
+                field[i][j] -= 1;
+
+                // 1 감소시켰는데 높이가 0이 되면 field_ID도 삭제
+                if (field[i][j] == 0)
+                {
+                    field_ID[i][j] = 0;
+                }
+            }
+        }
+    }
+
+    // 2. 각자 빙하 방향에 따라서 이동시키기(0:↑, 1:→, 2:↓, 3:←)
+    vector<vector<int>> temp_field;
+    temp_field.clear();
+    // temp_field.resize()
+    for (int i = 0; i < field_size; i++)
+    {
+        for (int j = 0; j < field_size; j++)
+        {
+        }
+    }
+
     return res;
 }
