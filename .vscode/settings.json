@@ -4,5 +4,6 @@
         "plaintext": false,
         "markdown": false,
         "scminput": false
-    }
+    },
+    "python-envs.defaultEnvManager": "ms-python.python:system"
 }
