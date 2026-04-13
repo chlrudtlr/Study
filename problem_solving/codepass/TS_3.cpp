@@ -108,6 +108,7 @@ int year;
 vector<vector<int>> field;
 vector<vector<int>> field_ID;
 map<int, int> dir_of_ice;
+map<int, int> vol_of_ice;
 
 bool debug;
 
@@ -140,6 +141,7 @@ void printfieldId()
 void Marking(int x, int y, int count)
 {
     field_ID[x][y] = count;
+    vol_of_ice[count] += field[x][y]; // marking 할 때 마다 해당 아이디에 해당하는 빙하의 부피에 더해주기
     // 상
     if ((x - 1 >= 0) && (field[x - 1][y] != 0) && (field_ID[x - 1][y] == 0))
     {
@@ -185,6 +187,7 @@ void Marking(int x, int y, int count)
 int MarkingFieldID()
 {
     int count = 0; // 빙하 아이디 → 1-based
+    vol_of_ice.clear();
     for (int i = 0; i < field_size; i++)
     {
         for (int j = 0; j < field_size; j++)
@@ -221,6 +224,7 @@ void init(int N, int M, int mIceBlock[MAX_N][MAX_N], int mIceGroup[MAX_M][3])
     field.clear();
     field_ID.clear();
     dir_of_ice.clear();
+    vol_of_ice.clear();
 
     // Initialize
     field_size = N;
@@ -298,11 +302,12 @@ RESULT oneYearLater()
     // 2. 각자 빙하 방향에 따라서 이동시키기(0:↑, 1:→, 2:↓, 3:←)
     vector<vector<int>> temp_field;
     temp_field.clear();
-    // temp_field.resize()
+    temp_field.resize(MAX_N, vector<int>(MAX_N, 0));
     for (int i = 0; i < field_size; i++)
     {
         for (int j = 0; j < field_size; j++)
         {
+            if (field_ID[i][j])
         }
     }
 
