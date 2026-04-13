@@ -299,17 +299,5 @@ RESULT oneYearLater()
         }
     }
 
-    // 2. 각자 빙하 방향에 따라서 이동시키기(0:↑, 1:→, 2:↓, 3:←)
-    vector<vector<int>> temp_field;
-    temp_field.clear();
-    temp_field.resize(MAX_N, vector<int>(MAX_N, 0));
-    for (int i = 0; i < field_size; i++)
-    {
-        for (int j = 0; j < field_size; j++)
-        {
-            if (field_ID[i][j])
-        }
-    }
-
     return res;
 }
