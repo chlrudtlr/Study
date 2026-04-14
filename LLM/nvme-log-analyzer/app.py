@@ -8,31 +8,31 @@ st.set_page_config(
 )
 
 # ------------------------
+# session_state 초기화
+# ------------------------
+if "selected_file_name" not in st.session_state:
+    st.session_state.selected_file_name = None
+
+if "selected_file_content" not in st.session_state:
+    st.session_state.selected_file_content = None
+
+if "analysis_done" not in st.session_state:
+    st.session_state.analysis_done = False
+
+# ------------------------
 # CSS 설정
 # ------------------------
 st.markdown("""
 <style>
-/* 기본 Streamlit 여백 제거 */
 section.main > div {
     padding-top: 0rem;
 }
 
-/* 전체 상단 여백 제거 */
 .block-container {
     padding-top: 3rem;
     padding-bottom: 3rem;
 }
 
-/* 사이드바 폭 줄이기 */
-section[data-testid="stSidebar"] {
-    width: 260px !important;
-}
-
-section[data-testid="stSidebar"] > div {
-    width: 260px !important;
-}
-
-/* 제목 영역 */
 .top-title {
     display: flex;
     justify-content: space-between;
@@ -51,14 +51,12 @@ section[data-testid="stSidebar"] > div {
     margin-bottom: 6px;
 }
 
-/* 구분선 */
 .top-line {
     border-top: 2px solid black;
     margin-top: 25px;
     margin-bottom: 25px;
 }
 
-/* text_area 전체 박스 안의 textarea 스타일 강제 지정 */
 [data-testid="stTextArea"] textarea {
     color: #000000 !important;
     -webkit-text-fill-color: #000000 !important;
@@ -70,7 +68,6 @@ section[data-testid="stSidebar"] > div {
     opacity: 1 !important;
 }
 
-/* disabled 상태에서도 동일하게 유지 */
 [data-testid="stTextArea"] textarea:disabled {
     color: #000000 !important;
     -webkit-text-fill-color: #000000 !important;
@@ -80,7 +77,6 @@ section[data-testid="stSidebar"] > div {
     opacity: 1 !important;
 }
 
-/* disabled일 때 바깥 박스까지 흐려지는 경우 방지 */
 [data-testid="stTextArea"] {
     opacity: 1 !important;
 }
@@ -145,34 +141,81 @@ with col1:
     )
 
     if uploaded_files:
-        for file in uploaded_files:
-            with st.expander(f"📄 {file.name}", expanded=False):
-                raw_data = file.read()
-                try:
-                    content = raw_data.decode("utf-8")
-                except UnicodeDecodeError:
-                    content = raw_data.decode("cp949", errors="replace")
+        file_dict = {}
 
+        for file in uploaded_files:
+            raw_data = file.read()
+            try:
+                content = raw_data.decode("utf-8")
+            except UnicodeDecodeError:
+                content = raw_data.decode("cp949", errors="replace")
+
+            file_dict[file.name] = content
+
+        # 1번, 2번 칸
+        select_col, button_col = st.columns([2, 1])
+
+        with select_col:
+            selected_name = st.selectbox(
+                "분석할 파일 선택",
+                options=list(file_dict.keys()),
+                index=0
+            )
+
+        with button_col:
+            st.write("")
+            st.write("")
+            analyze_clicked = st.button("분석 시작", use_container_width=True)
+
+        # 분석 시작 버튼 눌렀을 때만 분석 대상 저장
+        if analyze_clicked:
+            st.session_state.selected_file_name = selected_name
+            st.session_state.selected_file_content = file_dict[selected_name]
+            st.session_state.analysis_done = True
+
+        # 선택된 파일만 표시
+        if st.session_state.analysis_done and st.session_state.selected_file_name:
+            st.markdown("##### 선택된 분석 대상 파일")
+
+            with st.expander(f"📄 {st.session_state.selected_file_name}", expanded=True):
                 st.text_area(
                     label="log",
-                    value=content,
+                    value=st.session_state.selected_file_content,
                     height=350,
                     disabled=True,
                     label_visibility="collapsed",
-                    key=f"log_{file.name}"
+                    key=f"log_{st.session_state.selected_file_name}"
                 )
 
 # 요약 영역
 with col2:
     st.markdown("#### 🟨 분석 내용 요약")
 
-    with st.container(border=True):
-        st.markdown("##### Test summary")
-        st.write("이 영역은 텍스트 박스입니다.")
+    if st.session_state.analysis_done and st.session_state.selected_file_content:
+        content = st.session_state.selected_file_content
 
-    st.metric("Error Count", 0)
-    st.metric("Timeout", 0)
-    st.metric("UECC", 0)
+        # 예시 분석 로직
+        error_count = content.lower().count("error")
+        timeout_count = content.lower().count("timeout")
+        uecc_count = content.lower().count("uecc")
+
+        with st.container(border=True):
+            st.markdown("##### Test summary")
+            st.write(f"선택된 파일: **{st.session_state.selected_file_name}**")
+            st.write("분석 시작 버튼을 눌러 선택 파일에 대한 분석을 수행했습니다.")
+
+        st.metric("Error Count", error_count)
+        st.metric("Timeout", timeout_count)
+        st.metric("UECC", uecc_count)
+
+    else:
+        with st.container(border=True):
+            st.markdown("##### Test summary")
+            st.write("파일을 선택한 뒤 '분석 시작' 버튼을 눌러주세요.")
+
+        st.metric("Error Count", 0)
+        st.metric("Timeout", 0)
+        st.metric("UECC", 0)
 
 st.markdown("""
 <div class="top-line"></div>
@@ -182,12 +225,32 @@ st.markdown("""
 # 상세 분석 영역
 # ------------------------
 st.subheader("📄 상세 분석 결과")
-st.write("여기에 상세 로그 분석 결과가 출력됩니다.")
 
-df = pd.DataFrame({
-    "Time": [],
-    "Type": [],
-    "Message": []
-})
+if st.session_state.analysis_done and st.session_state.selected_file_content:
+    content = st.session_state.selected_file_content
+    lines = content.splitlines()
 
-st.dataframe(df, use_container_width=True)
+    results = []
+    for idx, line in enumerate(lines, start=1):
+        lower_line = line.lower()
+
+        if "error" in lower_line:
+            results.append({"Line": idx, "Type": "Error", "Message": line})
+        elif "timeout" in lower_line:
+            results.append({"Line": idx, "Type": "Timeout", "Message": line})
+        elif "uecc" in lower_line:
+            results.append({"Line": idx, "Type": "UECC", "Message": line})
+
+    if results:
+        df = pd.DataFrame(results)
+        st.dataframe(df, use_container_width=True)
+    else:
+        st.write("선택한 파일에서 Error / Timeout / UECC 관련 로그를 찾지 못했습니다.")
+else:
+    st.write("여기에 상세 로그 분석 결과가 출력됩니다.")
+    df = pd.DataFrame({
+        "Line": [],
+        "Type": [],
+        "Message": []
+    })
+    st.dataframe(df, use_container_width=True)
