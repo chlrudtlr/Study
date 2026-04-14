@@ -1,5 +1,8 @@
 import streamlit as st
 import pandas as pd
+import subprocess
+import tempfile
+from pathlib import Path
 
 # 페이지 설정
 st.set_page_config(
@@ -18,6 +21,64 @@ if "selected_file_content" not in st.session_state:
 
 if "analysis_done" not in st.session_state:
     st.session_state.analysis_done = False
+
+if "summary_output" not in st.session_state:
+    st.session_state.summary_output = ""
+
+if "analysis_error" not in st.session_state:
+    st.session_state.analysis_error = ""
+
+# ------------------------
+# C++ 자동 컴파일 + 실행 함수
+# ------------------------
+def run_cpp_parser(file_content: str) -> str:
+    project_dir = Path(__file__).resolve().parent
+    cpp_path = project_dir / "parser.cpp"
+    exe_path = project_dir / "parser"
+
+    if not cpp_path.exists():
+        raise FileNotFoundError(f"parser.cpp 파일을 찾을 수 없습니다: {cpp_path}")
+
+    # 1) parser.cpp 자동 컴파일
+    compile_result = subprocess.run(
+        ["g++", "-std=c++17", "-O2", str(cpp_path), "-o", str(exe_path)],
+        capture_output=True,
+        text=True
+    )
+
+    if compile_result.returncode != 0:
+        raise RuntimeError(
+            "C++ 컴파일 실패\n\n"
+            f"{compile_result.stderr}"
+        )
+
+    # 2) 업로드된 txt 내용을 임시 파일로 저장
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        suffix=".txt",
+        delete=False,
+        encoding="utf-8"
+    ) as temp_file:
+        temp_file.write(file_content)
+        temp_path = temp_file.name
+
+    # 3) 컴파일된 실행파일 자동 실행
+    run_result = subprocess.run(
+        [str(exe_path), temp_path],
+        capture_output=True,
+        text=True
+    )
+
+    # 임시 파일 삭제
+    Path(temp_path).unlink(missing_ok=True)
+
+    if run_result.returncode != 0:
+        raise RuntimeError(
+            "C++ 실행 실패\n\n"
+            f"{run_result.stderr}"
+        )
+
+    return run_result.stdout.strip()
 
 # ------------------------
 # CSS 설정
@@ -152,7 +213,6 @@ with col1:
 
             file_dict[file.name] = content
 
-        # 1번, 2번 칸
         select_col, button_col = st.columns([2, 1])
 
         with select_col:
@@ -167,13 +227,28 @@ with col1:
             st.write("")
             analyze_clicked = st.button("분석 시작", use_container_width=True)
 
-        # 분석 시작 버튼 눌렀을 때만 분석 대상 저장
         if analyze_clicked:
+            # 이전 분석 결과 초기화
+            st.session_state.summary_output = ""
+            st.session_state.analysis_error = ""
+            st.session_state.analysis_done = False
+
             st.session_state.selected_file_name = selected_name
             st.session_state.selected_file_content = file_dict[selected_name]
-            st.session_state.analysis_done = True
 
-        # 선택된 파일만 표시
+            try:
+                summary_result = run_cpp_parser(st.session_state.selected_file_content)
+
+                # 결과 저장
+                st.session_state.summary_output = summary_result
+                st.session_state.analysis_done = True
+                st.session_state.analysis_error = ""
+
+            except Exception as e:
+                st.session_state.summary_output = ""
+                st.session_state.analysis_done = False
+                st.session_state.analysis_error = str(e)
+
         if st.session_state.analysis_done and st.session_state.selected_file_name:
             st.markdown("##### 선택된 분석 대상 파일")
 
@@ -191,31 +266,28 @@ with col1:
 with col2:
     st.markdown("#### 🟨 분석 내용 요약")
 
-    if st.session_state.analysis_done and st.session_state.selected_file_content:
-        content = st.session_state.selected_file_content
+    if st.session_state.analysis_error:
+        with st.container(border=True):
+            st.markdown("##### Test summary")
+            st.error(st.session_state.analysis_error)
 
-        # 예시 분석 로직
-        error_count = content.lower().count("error")
-        timeout_count = content.lower().count("timeout")
-        uecc_count = content.lower().count("uecc")
-
+    elif st.session_state.analysis_done:
         with st.container(border=True):
             st.markdown("##### Test summary")
             st.write(f"선택된 파일: **{st.session_state.selected_file_name}**")
-            st.write("분석 시작 버튼을 눌러 선택 파일에 대한 분석을 수행했습니다.")
 
-        st.metric("Error Count", error_count)
-        st.metric("Timeout", timeout_count)
-        st.metric("UECC", uecc_count)
+            st.text_area(
+                label="summary_output",
+                value=st.session_state.summary_output,
+                height=566,
+                disabled=True,
+                label_visibility="collapsed",
+            )
 
     else:
         with st.container(border=True):
             st.markdown("##### Test summary")
             st.write("파일을 선택한 뒤 '분석 시작' 버튼을 눌러주세요.")
-
-        st.metric("Error Count", 0)
-        st.metric("Timeout", 0)
-        st.metric("UECC", 0)
 
 st.markdown("""
 <div class="top-line"></div>
@@ -227,25 +299,22 @@ st.markdown("""
 st.subheader("📄 상세 분석 결과")
 
 if st.session_state.analysis_done and st.session_state.selected_file_content:
-    content = st.session_state.selected_file_content
-    lines = content.splitlines()
+    lines = st.session_state.selected_file_content.splitlines()
 
     results = []
     for idx, line in enumerate(lines, start=1):
-        lower_line = line.lower()
-
-        if "error" in lower_line:
-            results.append({"Line": idx, "Type": "Error", "Message": line})
-        elif "timeout" in lower_line:
-            results.append({"Line": idx, "Type": "Timeout", "Message": line})
-        elif "uecc" in lower_line:
-            results.append({"Line": idx, "Type": "UECC", "Message": line})
+        if "Test Summary" in line:
+            results.append({
+                "Line": idx,
+                "Type": "Test Summary",
+                "Message": line
+            })
 
     if results:
         df = pd.DataFrame(results)
         st.dataframe(df, use_container_width=True)
     else:
-        st.write("선택한 파일에서 Error / Timeout / UECC 관련 로그를 찾지 못했습니다.")
+        st.write('선택한 파일에서 "Test Summary"를 포함한 라인을 찾지 못했습니다.')
 else:
     st.write("여기에 상세 로그 분석 결과가 출력됩니다.")
     df = pd.DataFrame({
