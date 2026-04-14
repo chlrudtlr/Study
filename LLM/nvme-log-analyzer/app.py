@@ -1,7 +1,25 @@
 import streamlit as st
+import streamlit.components.v1 as components
+import base64
+from pathlib import Path
+import pandas as pd
 
 # 페이지 설정
-st.set_page_config(layout="wide")
+st.set_page_config(
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+with st.sidebar:
+    st.markdown("### 📘 NVMe Spec")
+
+    pdf_url = "app/static/nvme_spec.pdf"
+
+    st.link_button(
+        "NVMe Spec 열기",
+        pdf_url,
+        use_container_width=True
+    )
 
 # ------------------------
 # CSS 설정
@@ -12,13 +30,13 @@ st.markdown("""
 section.main > div {
     padding-top: 0rem;
 }
-            
+
 /* 전체 상단 여백 제거 */
 .block-container {
     padding-top: 3rem;
     padding-bottom: 3rem;
 }
-            
+
 /* 제목 영역 */
 .top-title {
     display: flex;
@@ -45,6 +63,32 @@ section.main > div {
     margin-bottom: 25px;
 }
 
+/* text_area 전체 박스 안의 textarea 스타일 강제 지정 */
+[data-testid="stTextArea"] textarea {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    background-color: #f8f9fa !important;
+    font-family: "Courier New", Consolas, monospace !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    cursor: text !important;
+    opacity: 1 !important;
+}
+
+/* disabled 상태에서도 동일하게 유지 */
+[data-testid="stTextArea"] textarea:disabled {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    background-color: #f8f9fa !important;
+    font-family: "Courier New", Consolas, monospace !important;
+    cursor: text !important;
+    opacity: 1 !important;
+}
+
+/* disabled일 때 바깥 박스까지 흐려지는 경우 방지 */
+[data-testid="stTextArea"] {
+    opacity: 1 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -84,9 +128,8 @@ col1, col2 = st.columns(2)
 
 # 파일 업로드
 with col1:
-    st.markdown("""
-    #### 🟧 로그 파일 업로드(.txt)
-    """)
+    st.markdown("#### 🟧 로그 파일 업로드(.txt)")
+
     uploaded_files = st.file_uploader(
         "TXT 파일 업로드 (여러 개 가능)",
         type=["txt"],
@@ -94,15 +137,32 @@ with col1:
         label_visibility="collapsed"
     )
 
+    if uploaded_files:
+        for file in uploaded_files:
+            with st.expander(f"📄 {file.name}", expanded=False):
+                raw_data = file.read()
+                try:
+                    content = raw_data.decode("utf-8")
+                except UnicodeDecodeError:
+                    content = raw_data.decode("cp949", errors="replace")
+
+                st.text_area(
+                    label="log",
+                    value=content,
+                    height=350,
+                    disabled=True,
+                    label_visibility="collapsed",
+                    key=f"log_{file.name}"
+                )
+
 # 요약 영역
 with col2:
-    st.markdown("""
-    #### 🟨 분석 내용 요약
-    """)
+    st.markdown("#### 🟨 분석 내용 요약")
+
     with st.container(border=True):
         st.markdown("##### Test summary")
         st.write("이 영역은 텍스트 박스입니다.")
-    # 예시
+
     st.metric("Error Count", 0)
     st.metric("Timeout", 0)
     st.metric("UECC", 0)
@@ -115,11 +175,7 @@ st.markdown("""
 # 상세 분석 영역
 # ------------------------
 st.subheader("📄 상세 분석 결과")
-
 st.write("여기에 상세 로그 분석 결과가 출력됩니다.")
-
-# 예시 테이블
-import pandas as pd
 
 df = pd.DataFrame({
     "Time": [],
