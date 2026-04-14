@@ -141,6 +141,38 @@ section.main > div {
 [data-testid="stTextArea"] {
     opacity: 1 !important;
 }
+            
+/* 분석 시작 버튼 위치 */
+div.stButton {
+    margin-top: 28px;
+}
+
+/* 분석 시작 버튼 스타일 */
+div.stButton > button {
+    background-color: white !important;
+    color: #ff4d4f !important;
+    border: 2px solid #ff4d4f !important;
+    border-radius: 10px !important;
+    height: 40px !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    box-shadow: none !important;
+}
+
+/* hover 효과 */
+div.stButton > button:hover {
+    background-color: #fff1f0 !important;
+    color: #ff4d4f !important;
+    border: 2px solid #ff4d4f !important;
+}
+
+/* 클릭 효과 */
+div.stButton > button:active {
+    background-color: #ffe3e3 !important;
+    color: #ff4d4f !important;
+    border: 2px solid #ff4d4f !important;
+    transform: scale(0.98);
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -223,8 +255,6 @@ with col1:
             )
 
         with button_col:
-            st.write("")
-            st.write("")
             analyze_clicked = st.button("분석 시작", use_container_width=True)
 
         if analyze_clicked:
