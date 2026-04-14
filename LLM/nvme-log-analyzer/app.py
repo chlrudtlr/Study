@@ -28,6 +28,14 @@ if "summary_output" not in st.session_state:
 if "analysis_error" not in st.session_state:
     st.session_state.analysis_error = ""
 
+if "spec_chat_history" not in st.session_state:
+    st.session_state.spec_chat_history = [
+        {"role": "assistant", "content": "안녕하세요. NVMe Spec 관련 질문을 입력해주세요."}
+    ]
+
+if "spec_chat_input" not in st.session_state:
+    st.session_state.spec_chat_input = ""
+
 # ------------------------
 # C++ 자동 컴파일 + 실행 함수
 # ------------------------
@@ -141,11 +149,6 @@ section.main > div {
 [data-testid="stTextArea"] {
     opacity: 1 !important;
 }
-            
-/* 분석 시작 버튼 위치 */
-div.stButton {
-    margin-top: 28px;
-}
 
 /* 분석 시작 버튼 스타일 */
 div.stButton > button {
@@ -173,6 +176,79 @@ div.stButton > button:active {
     border: 2px solid #ff4d4f !important;
     transform: scale(0.98);
 }
+            
+/* ------------------------ */
+/* 사이드바 챗봇 UI */
+/* ------------------------ */
+.spec-chat-wrap {
+    border: 1px solid #d9d9d9;
+    border-radius: 12px;
+    padding: 14px;
+    margin-top: 18px;
+    background: white;
+}
+
+.spec-chat-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.spec-chat-desc {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.spec-chat-box {
+    border: 1px solid #d9d9d9;
+    border-radius: 10px;
+    background: #fafafa;
+    height: 360px;
+    overflow-y: auto;
+    padding: 10px;
+    margin-bottom: 12px;
+}
+
+.spec-user-msg {
+    background: #e6f4ff;
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    white-space: pre-wrap;
+}
+
+.spec-bot-msg {
+    background: #f6f6f6;
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    white-space: pre-wrap;
+}
+
+.spec-chat-input-label {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+            
+/* 분석 시작 버튼만 아래로 내리기 */
+.analyze-btn-wrap {
+    margin-top: 28px;
+}
+
+/* 챗봇 form submit 버튼은 위쪽 여백 제거 */
+div[data-testid="stForm"] div.stButton {
+    margin-top: 0 !important;
+}
+
+/* text_input 기본 여백 최소화 */
+[data-testid="stTextInput"] {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -184,9 +260,55 @@ with st.sidebar:
 
     st.link_button(
         "NVMe Spec 열기",
-        "app/static/nvme_spec.pdf",
+        "app/static/NVM-Express-Base-Specification-2.0e-2024.07.29-Ratified.pdf",
         use_container_width=True
     )
+
+    st.markdown("### 💬 NVMe Spec Chatbot")
+    st.markdown('<div class="spec-chat-desc">NVMe Spec 기반으로 질의응답을 할 수 있습니다.</div>', unsafe_allow_html=True)
+
+    # 스크롤 가능한 대화 영역 시작
+    chat_html = '<div class="spec-chat-box">'
+    for msg in st.session_state.spec_chat_history:
+        if msg["role"] == "user":
+            chat_html += f'<div class="spec-user-msg">{msg["content"]}</div>'
+        else:
+            chat_html += f'<div class="spec-bot-msg">{msg["content"]}</div>'
+    chat_html += '</div>'
+
+    st.markdown(chat_html, unsafe_allow_html=True)
+
+    st.markdown('<div class="spec-chat-input-label">질문 입력</div>', unsafe_allow_html=True)
+
+    with st.form("spec_chat_form", clear_on_submit=True):
+        input_col, btn_col = st.columns([4, 1], vertical_alignment="bottom")
+
+        with input_col:
+            user_question = st.text_input(
+                label="",
+                key="spec_chat_input",
+                placeholder="예: Identify Controller의 CSTS 필드 설명해줘",
+                label_visibility="collapsed"
+            )
+
+        with btn_col:
+            ask_clicked = st.form_submit_button("입력", use_container_width=True)
+
+    if ask_clicked and user_question.strip():
+        question = user_question.strip()
+
+        st.session_state.spec_chat_history.append({
+            "role": "user",
+            "content": question
+        })
+        st.session_state.spec_chat_history.append({
+            "role": "assistant",
+            "content": f"(예시 응답) '{question}'에 대한 답변이 여기에 표시될 예정입니다."
+        })
+
+        st.rerun()
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------
 # Header
@@ -255,7 +377,9 @@ with col1:
             )
 
         with button_col:
-            analyze_clicked = st.button("분석 시작", use_container_width=True)
+            st.markdown('<div class="analyze-btn-wrap">', unsafe_allow_html=True)
+            analyze_clicked = st.button("분석 시작", use_container_width=True, key="analyze_btn")
+            st.markdown('</div>', unsafe_allow_html=True)
 
         if analyze_clicked:
             # 이전 분석 결과 초기화
