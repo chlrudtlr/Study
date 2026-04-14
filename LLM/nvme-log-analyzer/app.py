@@ -1,7 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
-import base64
-from pathlib import Path
 import pandas as pd
 
 # 페이지 설정
@@ -9,17 +6,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-
-with st.sidebar:
-    st.markdown("### 📘 NVMe Spec")
-
-    pdf_url = "app/static/nvme_spec.pdf"
-
-    st.link_button(
-        "NVMe Spec 열기",
-        pdf_url,
-        use_container_width=True
-    )
 
 # ------------------------
 # CSS 설정
@@ -35,6 +21,15 @@ section.main > div {
 .block-container {
     padding-top: 3rem;
     padding-bottom: 3rem;
+}
+
+/* 사이드바 폭 줄이기 */
+section[data-testid="stSidebar"] {
+    width: 260px !important;
+}
+
+section[data-testid="stSidebar"] > div {
+    width: 260px !important;
 }
 
 /* 제목 영역 */
@@ -91,6 +86,18 @@ section.main > div {
 }
 </style>
 """, unsafe_allow_html=True)
+
+# ------------------------
+# 왼쪽 사이드바
+# ------------------------
+with st.sidebar:
+    st.markdown("### 📘 NVMe Spec")
+
+    st.link_button(
+        "NVMe Spec 열기",
+        "app/static/nvme_spec.pdf",
+        use_container_width=True
+    )
 
 # ------------------------
 # Header
