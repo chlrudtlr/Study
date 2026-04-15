@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import subprocess
 import tempfile
+import html
 from pathlib import Path
 
 # 페이지 설정
@@ -86,7 +87,59 @@ def run_cpp_parser(file_content: str) -> str:
             f"{run_result.stderr}"
         )
 
-    return run_result.stdout.strip()
+    return run_result.stdout
+
+def parse_summary_output(summary_output: str):
+    tc_name = "Unknown TC"
+    details = ""
+    summary = ""
+
+    if "__TC_NAME__" not in summary_output or "__DETAILS__" not in summary_output:
+        return tc_name, details, summary
+
+    tc_split = summary_output.split("__TC_NAME__", 1)
+    if len(tc_split) < 2:
+        return tc_name, details, summary
+
+    after_tc = tc_split[1]
+
+    details_split = after_tc.split("__DETAILS__", 1)
+    if len(details_split) < 2:
+        return tc_name, details, summary
+
+    tc_name = details_split[0].strip()
+
+    after_details = details_split[1]
+
+    if "__SUMMARY__" in after_details:
+        details, summary = after_details.split("__SUMMARY__", 1)
+        details = details.strip()
+        summary = summary.strip()
+    else:
+        details = after_details.strip()
+
+    return tc_name, details, summary
+
+def format_details_text(details_text: str) -> str:
+    lines = [line.strip() for line in details_text.splitlines() if line.strip()]
+    result = []
+
+    for line in lines:
+        if line.startswith("- "):
+            line = line[2:]
+
+        if " : " in line:
+            key, value = line.split(" : ", 1)
+            formatted = f"<b>{html.escape(key)}</b> : {html.escape(value)}"
+        elif ":" in line:
+            key, value = line.split(":", 1)
+            formatted = f"<b>{html.escape(key)}</b> : {html.escape(value)}"
+        else:
+            formatted = html.escape(line)
+
+        result.append(formatted)
+
+    return "<br>".join(result)
 
 # ------------------------
 # CSS 설정
@@ -280,15 +333,18 @@ div[data-testid="stForm"] div.stButton {
     background: #ffffff;
     box-sizing: border-box;
     padding: 16px;
-    min-height: 220px;
+    min-height: 180px;
     white-space: pre-wrap;
+
     font-size: 15px;
-    line-height: 1.6;
+    line-height: 1.8;
+    font-family: "Segoe UI", Arial, sans-serif;
+
     overflow-y: auto;
 }
 
 .summary-split-box.large {
-    min-height: 260px;
+    min-height: 220px;
 }
 
 .summary-empty-center {
@@ -309,7 +365,7 @@ with st.sidebar:
     st.link_button(
         "NVMe Spec 열기",
         "app/static/NVM-Express-Base-Specification-2.0e-2024.07.29-Ratified.pdf",
-        use_container_width=True
+        width="stretch"
     )
 
     st.markdown("### 💬 NVMe Spec Chatbot")
@@ -333,14 +389,14 @@ with st.sidebar:
 
         with input_col:
             user_question = st.text_input(
-                label="",
+                label="NVMe Spec 질문 입력",
                 key="spec_chat_input",
                 placeholder="예: Identify Controller의 CSTS 필드 설명해줘",
                 label_visibility="collapsed"
             )
 
         with btn_col:
-            ask_clicked = st.form_submit_button("입력", use_container_width=True)
+            ask_clicked = st.form_submit_button("입력", width="stretch")
 
     if ask_clicked and user_question.strip():
         question = user_question.strip()
@@ -424,7 +480,7 @@ if uploaded_files:
 
     with button_col:
         st.markdown('<div class="analyze-btn-wrap">', unsafe_allow_html=True)
-        analyze_clicked = st.button("분석 시작", use_container_width=True, key="analyze_btn")
+        analyze_clicked = st.button("분석 시작", width="stretch", key="analyze_btn")
         st.markdown('</div>', unsafe_allow_html=True)
 
     if analyze_clicked:
@@ -450,9 +506,9 @@ if uploaded_files:
             st.session_state.analysis_error = str(e)
 
     if st.session_state.analysis_done and st.session_state.selected_file_name:
-        st.markdown("##### 선택된 분석 대상 파일")
+        st.markdown("##### 선택한 파일 전체 로그 보기")
 
-        with st.expander(f"📄 {st.session_state.selected_file_name}", expanded=True):
+        with st.expander(f"📄 {st.session_state.selected_file_name}", expanded=False):
             st.text_area(
                 label="log",
                 value=st.session_state.selected_file_content,
@@ -475,16 +531,13 @@ if st.session_state.analysis_error:
         st.error(st.session_state.analysis_error)
 
 elif st.session_state.analysis_done:
-    selected_name = st.session_state.selected_file_name or "TC 이름"
-    tc_title = f"Test Summary of [{selected_name}]"
+    tc_name, box1_text, box2_text = parse_summary_output(st.session_state.summary_output)
 
-    summary_lines = st.session_state.summary_output.splitlines()
-
-    box1_text = "\n".join(summary_lines[:10]).strip()
-    box2_text = "\n".join(summary_lines[10:]).strip()
+    title_text = f"Test Summary of [{tc_name}]"
+    formatted_details = format_details_text(box1_text)
 
     if not box1_text:
-        box1_text = "&nbsp;"
+        box1_text = ""
     if not box2_text:
         box2_text = "&nbsp;"
 
@@ -492,8 +545,8 @@ elif st.session_state.analysis_done:
         st.markdown(
             f"""
             <div class="summary-split-wrap">
-                <div class="summary-split-title">{tc_title}</div>
-                <div class="summary-split-box">{box1_text}</div>
+                <div class="summary-split-title">{title_text}</div>
+                <div class="summary-split-box">{formatted_details}</div>
                 <div class="summary-split-box large">{box2_text}</div>
             </div>
             """,
@@ -528,7 +581,7 @@ if st.session_state.analysis_done and st.session_state.selected_file_content:
 
     if results:
         df = pd.DataFrame(results)
-        st.dataframe(df, use_container_width=True)
+        st.dataframe(df, width="stretch")
     else:
         st.write('선택한 파일에서 "Test Summary"를 포함한 라인을 찾지 못했습니다.')
 else:
@@ -538,4 +591,4 @@ else:
         "Type": [],
         "Message": []
     })
-    st.dataframe(df, use_container_width=True)
+    st.dataframe(df, width="stretch")
