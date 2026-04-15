@@ -249,6 +249,54 @@ div[data-testid="stForm"] div.stButton {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
 }
+            
+/* ------------------------ */
+/* 분석 요약 3분할 영역 */
+/* ------------------------ */
+.summary-split-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+.summary-split-title {
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    height: 64px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    background: #ffffff;
+    padding: 0 16px;
+}
+
+.summary-split-box {
+    border: 1px solid #d9d9d9;
+    border-radius: 8px;
+    background: #ffffff;
+    box-sizing: border-box;
+    padding: 16px;
+    min-height: 220px;
+    white-space: pre-wrap;
+    font-size: 15px;
+    line-height: 1.6;
+    overflow-y: auto;
+}
+
+.summary-split-box.large {
+    min-height: 260px;
+}
+
+.summary-empty-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+            
 </style>
 """, unsafe_allow_html=True)
 
@@ -342,106 +390,120 @@ st.markdown("""
 # ------------------------
 # 중간 영역 (업로드 + 요약)
 # ------------------------
-col1, col2 = st.columns(2)
 
 # 파일 업로드
-with col1:
-    st.markdown("#### 🟧 로그 파일 업로드(.txt)")
+st.markdown("#### 🟧 로그 파일 업로드(.txt)")
 
-    uploaded_files = st.file_uploader(
-        "TXT 파일 업로드 (여러 개 가능)",
-        type=["txt"],
-        accept_multiple_files=True,
-        label_visibility="collapsed"
-    )
+uploaded_files = st.file_uploader(
+    "TXT 파일 업로드 (여러 개 가능)",
+    type=["txt"],
+    accept_multiple_files=True,
+    label_visibility="collapsed"
+)
 
-    if uploaded_files:
-        file_dict = {}
+if uploaded_files:
+    file_dict = {}
 
-        for file in uploaded_files:
-            raw_data = file.read()
-            try:
-                content = raw_data.decode("utf-8")
-            except UnicodeDecodeError:
-                content = raw_data.decode("cp949", errors="replace")
+    for file in uploaded_files:
+        raw_data = file.read()
+        try:
+            content = raw_data.decode("utf-8")
+        except UnicodeDecodeError:
+            content = raw_data.decode("cp949", errors="replace")
 
-            file_dict[file.name] = content
+        file_dict[file.name] = content
 
-        select_col, button_col = st.columns([2, 1])
+    select_col, button_col = st.columns([2, 1])
 
-        with select_col:
-            selected_name = st.selectbox(
-                "분석할 파일 선택",
-                options=list(file_dict.keys()),
-                index=0
-            )
+    with select_col:
+        selected_name = st.selectbox(
+            "분석할 파일 선택",
+            options=list(file_dict.keys()),
+            index=0
+        )
 
-        with button_col:
-            st.markdown('<div class="analyze-btn-wrap">', unsafe_allow_html=True)
-            analyze_clicked = st.button("분석 시작", use_container_width=True, key="analyze_btn")
-            st.markdown('</div>', unsafe_allow_html=True)
+    with button_col:
+        st.markdown('<div class="analyze-btn-wrap">', unsafe_allow_html=True)
+        analyze_clicked = st.button("분석 시작", use_container_width=True, key="analyze_btn")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-        if analyze_clicked:
-            # 이전 분석 결과 초기화
-            st.session_state.summary_output = ""
+    if analyze_clicked:
+        # 이전 분석 결과 초기화
+        st.session_state.summary_output = ""
+        st.session_state.analysis_error = ""
+        st.session_state.analysis_done = False
+
+        st.session_state.selected_file_name = selected_name
+        st.session_state.selected_file_content = file_dict[selected_name]
+
+        try:
+            summary_result = run_cpp_parser(st.session_state.selected_file_content)
+
+            # 결과 저장
+            st.session_state.summary_output = summary_result
+            st.session_state.analysis_done = True
             st.session_state.analysis_error = ""
+
+        except Exception as e:
+            st.session_state.summary_output = ""
             st.session_state.analysis_done = False
+            st.session_state.analysis_error = str(e)
 
-            st.session_state.selected_file_name = selected_name
-            st.session_state.selected_file_content = file_dict[selected_name]
+    if st.session_state.analysis_done and st.session_state.selected_file_name:
+        st.markdown("##### 선택된 분석 대상 파일")
 
-            try:
-                summary_result = run_cpp_parser(st.session_state.selected_file_content)
-
-                # 결과 저장
-                st.session_state.summary_output = summary_result
-                st.session_state.analysis_done = True
-                st.session_state.analysis_error = ""
-
-            except Exception as e:
-                st.session_state.summary_output = ""
-                st.session_state.analysis_done = False
-                st.session_state.analysis_error = str(e)
-
-        if st.session_state.analysis_done and st.session_state.selected_file_name:
-            st.markdown("##### 선택된 분석 대상 파일")
-
-            with st.expander(f"📄 {st.session_state.selected_file_name}", expanded=True):
-                st.text_area(
-                    label="log",
-                    value=st.session_state.selected_file_content,
-                    height=350,
-                    disabled=True,
-                    label_visibility="collapsed",
-                    key=f"log_{st.session_state.selected_file_name}"
-                )
-
-# 요약 영역
-with col2:
-    st.markdown("#### 🟨 분석 내용 요약")
-
-    if st.session_state.analysis_error:
-        with st.container(border=True):
-            st.markdown("##### Test summary")
-            st.error(st.session_state.analysis_error)
-
-    elif st.session_state.analysis_done:
-        with st.container(border=True):
-            st.markdown("##### Test summary")
-            st.write(f"선택된 파일: **{st.session_state.selected_file_name}**")
-
+        with st.expander(f"📄 {st.session_state.selected_file_name}", expanded=True):
             st.text_area(
-                label="summary_output",
-                value=st.session_state.summary_output,
-                height=566,
+                label="log",
+                value=st.session_state.selected_file_content,
+                height=350,
                 disabled=True,
                 label_visibility="collapsed",
+                key=f"log_{st.session_state.selected_file_name}"
             )
 
-    else:
-        with st.container(border=True):
-            st.markdown("##### Test summary")
-            st.write("파일을 선택한 뒤 '분석 시작' 버튼을 눌러주세요.")
+st.markdown("""
+<div class="top-line"></div>
+""", unsafe_allow_html=True)
+
+# 요약 영역
+st.markdown("#### 🟨 분석 내용 요약")
+
+if st.session_state.analysis_error:
+    with st.container(border=True):
+        st.markdown("##### Test summary")
+        st.error(st.session_state.analysis_error)
+
+elif st.session_state.analysis_done:
+    selected_name = st.session_state.selected_file_name or "TC 이름"
+    tc_title = f"Test Summary of [{selected_name}]"
+
+    summary_lines = st.session_state.summary_output.splitlines()
+
+    box1_text = "\n".join(summary_lines[:10]).strip()
+    box2_text = "\n".join(summary_lines[10:]).strip()
+
+    if not box1_text:
+        box1_text = "&nbsp;"
+    if not box2_text:
+        box2_text = "&nbsp;"
+
+    with st.container(border=True):
+        st.markdown(
+            f"""
+            <div class="summary-split-wrap">
+                <div class="summary-split-title">{tc_title}</div>
+                <div class="summary-split-box">{box1_text}</div>
+                <div class="summary-split-box large">{box2_text}</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+else:
+    with st.container(border=True):
+        st.markdown("##### Test summary")
+        st.write("파일을 선택한 뒤 '분석 시작' 버튼을 눌러주세요.")
 
 st.markdown("""
 <div class="top-line"></div>
