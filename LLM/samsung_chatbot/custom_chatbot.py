@@ -26,7 +26,7 @@ class DocumentChatbot:
         self,
         documents_dir: Optional[str] = None,
         documents_desc: Optional[str] = None,
-        force_reload: bool = True,
+        force_reload: bool = True,  # 처음 1회만 True, 이후에는 False 권장
     ) -> None:
         self.llm = ChatOllama(model="gemma3:1b")
         self.route_llm = ChatOllama(model="gemma3:1b", format="json")
@@ -39,20 +39,58 @@ class DocumentChatbot:
             faiss_dir = documents_dir + "_faiss"
 
             if os.path.exists(faiss_dir) and not force_reload:
+                print("📦 기존 FAISS 인덱스를 로드합니다...")
                 self.vectorstore = FAISS.load_local(
                     faiss_dir,
                     embeddings=self.embeddings,
                     allow_dangerous_deserialization=True,
                 )
+                print("✅ 기존 FAISS 인덱스 로드 완료")
             else:
+                print("📄 문서 로드 및 청크 분할 시작")
                 docs = self._load_and_split_documents(documents_dir)
-                self.vectorstore = FAISS.from_documents(docs, embedding=self.embeddings)
+                print(f"✅ 문서 분할 완료 - 총 chunk 수: {len(docs)}")
+
+                print("🧠 임베딩 생성 및 FAISS 인덱스 생성 시작")
+
+                texts = [doc.page_content for doc in docs]
+                metadatas = [doc.metadata for doc in docs]
+
+                embeddings: List[List[float]] = []
+                total = len(texts)
+                batch_size = 50
+
+                for i in range(0, total, batch_size):
+                    batch = texts[i : i + batch_size]
+                    batch_emb = self.embeddings.embed_documents(batch)
+                    embeddings.extend(batch_emb)
+
+                    done = i + len(batch)
+                    percent = (done / total) * 100
+                    print(f"⏳ 임베딩 진행률: {done}/{total} ({percent:.1f}%)")
+
+                print("📦 FAISS 인덱스 생성 중...")
+
+                text_embeddings = list(zip(texts, embeddings))
+
+                self.vectorstore = FAISS.from_embeddings(
+                    text_embeddings=text_embeddings,
+                    embedding=self.embeddings,
+                    metadatas=metadatas,
+                )
+
+                print("✅ FAISS 인덱스 생성 완료")
 
                 if os.path.exists(faiss_dir):
                     shutil.rmtree(faiss_dir)
-                self.vectorstore.save_local(faiss_dir)
 
+                print("💾 FAISS 인덱스 저장 시작")
+                self.vectorstore.save_local(faiss_dir)
+                print("✅ FAISS 인덱스 저장 완료")
+
+            print("🔎 Retriever 생성 시작")
             self.db_retriever = self.vectorstore.as_retriever(search_kwargs={"k": 5})
+            print("✅ Retriever 생성 완료")
 
         builder = StateGraph(State)
 
@@ -90,8 +128,8 @@ class DocumentChatbot:
         all_docs: List[Document] = []
 
         splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1200,
-            chunk_overlap=150,
+            chunk_size=2000,
+            chunk_overlap=100,
             separators=["\n\n", "\n", " ", ""],
         )
 
@@ -110,25 +148,22 @@ class DocumentChatbot:
             print(f"📄 총 페이지 수: {total_pages}")
 
             processed_pages = 0
-            split_docs = []
+            split_docs: List[Document] = []
 
-            for i, doc in enumerate(raw_docs):
-                # 페이지 메타데이터 추가
+            for doc in raw_docs:
                 doc.metadata["source"] = file
                 if "page" in doc.metadata:
                     doc.metadata["page"] = doc.metadata["page"] + 1
 
-                # 페이지 단위로 split
                 chunks = splitter.split_documents([doc])
                 split_docs.extend(chunks)
 
                 processed_pages += 1
 
-                # 👉 진행률 출력 (10페이지마다 or 마지막 페이지)
                 if processed_pages % 10 == 0 or processed_pages == total_pages:
                     percent = (processed_pages / total_pages) * 100
                     print(
-                        f"⏳ 진행률: {processed_pages}/{total_pages} "
+                        f"⏳ 페이지 진행률: {processed_pages}/{total_pages} "
                         f"({percent:.1f}%)"
                     )
 
@@ -141,7 +176,7 @@ class DocumentChatbot:
         return all_docs
 
     def invoke(self, question: str) -> Dict[str, Any]:
-        answer = self.graph.invoke({"question": question}) # type: ignore
+        answer = self.graph.invoke({"question": question})  # type: ignore
         print("===생성 종료===")
         return answer
 
