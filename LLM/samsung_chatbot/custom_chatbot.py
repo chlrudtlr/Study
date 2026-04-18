@@ -58,16 +58,23 @@ class DocumentChatbot:
 
                 embeddings: List[List[float]] = []
                 total = len(texts)
-                batch_size = 50
+                batch_size = 10  # 기존 50 -> 10으로 줄이기
 
                 for i in range(0, total, batch_size):
                     batch = texts[i : i + batch_size]
+                    start_idx = i + 1
+                    end_idx = i + len(batch)
+
+                    print(f"🚀 임베딩 요청 시작: {start_idx}~{end_idx}/{total}")
+
                     batch_emb = self.embeddings.embed_documents(batch)
+
+                    print(f"✅ 임베딩 요청 완료: {start_idx}~{end_idx}/{total}")
+
                     embeddings.extend(batch_emb)
 
-                    done = i + len(batch)
-                    percent = (done / total) * 100
-                    print(f"⏳ 임베딩 진행률: {done}/{total} ({percent:.1f}%)")
+                    percent = (end_idx / total) * 100
+                    print(f"⏳ 임베딩 진행률: {end_idx}/{total} ({percent:.1f}%)")
 
                 print("📦 FAISS 인덱스 생성 중...")
 
