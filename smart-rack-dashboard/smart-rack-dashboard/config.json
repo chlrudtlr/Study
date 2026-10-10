@@ -1,0 +1,7 @@
+{
+  "auto_enabled": false,
+  "max_retries": 3,
+  "cooldown_seconds": 15,
+  "min_confidence": 0.85,
+  "poll_seconds": 3
+}
